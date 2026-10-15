@@ -138,7 +138,10 @@ def analyze_frame(
         [684, 333, 843, 420],
     ]
     yolo_objects = _local_yolo_objects(source_frame, model_path or settings.yolo_model_path) if (use_yolo if use_yolo is not None else settings.enable_yolo) else []
-    objects = yolo_objects or [
+    if yolo_objects:
+        objects = [item.model_copy(update={"flooded": item.box[3] >= waterline}) for item in yolo_objects]
+    else:
+        objects = [
         DetectedObject(
             label="flooded car",
             confidence=0.94 - index * 0.04,
@@ -146,7 +149,7 @@ def analyze_frame(
             box=box,
         )
         for index, box in enumerate(simulated_boxes)
-    ]
+        ]
     for detected in objects:
         left, top, right, bottom = detected.box
         color = (36, 62, 244) if detected.flooded else (30, 190, 240)
