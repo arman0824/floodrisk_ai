@@ -1,5 +1,6 @@
 PYTHON ?= .venv/bin/python
 SYSTEM_PYTHON ?= python3.11
+APP_PATH ?= src
 
 .PHONY: install test api dashboard docker-build docker-up
 
@@ -8,13 +9,13 @@ install:
 	$(PYTHON) -m pip install -r requirements.lock
 
 test:
-	LIVE_DATA_ENABLED=false $(PYTHON) -m pytest -q
+	PYTHONPATH=$(APP_PATH) LIVE_DATA_ENABLED=false $(PYTHON) -m pytest -q
 
 api:
-	$(PYTHON) -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	PYTHONPATH=$(APP_PATH) $(PYTHON) -m uvicorn flood_command_center.main:app --host 0.0.0.0 --port 8000 --reload
 
 dashboard:
-	$(PYTHON) -m streamlit run app.py --server.address 0.0.0.0 --server.port 8501
+	PYTHONPATH=$(APP_PATH) $(PYTHON) -m streamlit run src/flood_command_center/app.py --server.address 0.0.0.0 --server.port 8501
 
 docker-build:
 	docker build -t flood-command-center .

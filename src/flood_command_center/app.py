@@ -12,8 +12,8 @@ import pandas as pd
 import pydeck as pdk
 import streamlit as st
 
-from config import get_settings
-from service import FloodRiskService
+from flood_command_center.config import get_settings
+from flood_command_center.service import FloodRiskService
 
 
 st.set_page_config(

@@ -7,7 +7,7 @@ import random
 from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator
 
-from models import SocialPing, TelemetryUpdate
+from flood_command_center.models import SocialPing, TelemetryUpdate
 
 
 MUMBAI_NODES: tuple[dict[str, object], ...] = (

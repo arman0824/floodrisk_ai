@@ -2,7 +2,7 @@ import asyncio
 
 from fastapi.testclient import TestClient
 
-from main import app, live_status
+from flood_command_center.main import app, live_status
 
 
 client = TestClient(app)

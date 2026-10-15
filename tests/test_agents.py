@@ -1,6 +1,6 @@
-from agents import LANGGRAPH_AVAILABLE, FloodGraphState, run_pipeline, social_agent
-from mock_streams import create_demo_snapshot
-from models import SocialPing
+from flood_command_center.agents import LANGGRAPH_AVAILABLE, FloodGraphState, run_pipeline, social_agent
+from flood_command_center.mock_streams import create_demo_snapshot
+from flood_command_center.models import SocialPing
 
 
 def test_explicit_graph_compiles_and_transfers_agent_outputs() -> None:

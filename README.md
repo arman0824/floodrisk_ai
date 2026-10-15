@@ -10,6 +10,27 @@ cycle fetches current data and records provider health. If a provider is down,
 only that provider falls back to deterministic local data and the dashboard
 labels the result as `mixed` or `fallback`.
 
+## Project structure
+
+```text
+floodRisk/
+├── src/flood_command_center/
+│   ├── agents.py          # LangGraph agents and risk synthesis
+│   ├── app.py             # Streamlit/Pydeck dashboard
+│   ├── config.py          # Environment-backed settings
+│   ├── live_streams.py    # Open-Meteo and Google News adapters
+│   ├── main.py            # FastAPI application and SSE routes
+│   ├── mock_streams.py    # Deterministic fallback data
+│   ├── models.py          # Pydantic contracts
+│   └── service.py         # Snapshot orchestration
+├── tests/                 # API, agent, provider, and dashboard tests
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── requirements.txt
+└── README.md
+```
+
 ## Quick start
 
 Requirements: Python 3.11+ and a virtual environment. Python 3.11.15 is

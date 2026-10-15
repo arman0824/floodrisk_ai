@@ -1,4 +1,4 @@
-from mock_streams import MUMBAI_NODES, MockStreamEngine
+from flood_command_center.mock_streams import MUMBAI_NODES, MockStreamEngine
 
 
 def test_mock_snapshot_has_realistic_shape_and_bounds() -> None:

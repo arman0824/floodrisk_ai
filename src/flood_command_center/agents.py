@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any, TypedDict
 
-from mock_streams import MUMBAI_NODES
-from models import (
+from flood_command_center.mock_streams import MUMBAI_NODES
+from flood_command_center.models import (
     AgentTrace,
     DispatchSynthesis,
     ResourcePriority,
@@ -204,7 +204,7 @@ def _optional_llm_headline(dispatch: DispatchSynthesis) -> str:
     """Use OpenAI only when configured; otherwise retain local copy."""
 
     try:
-        from config import get_settings
+        from flood_command_center.config import get_settings
 
         settings = get_settings()
         if not settings.llm_enabled:

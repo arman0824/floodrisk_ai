@@ -9,9 +9,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from config import get_settings
-from models import BroadcastRequest, BroadcastResponse, LiveStatus
-from service import FloodRiskService
+from flood_command_center.config import get_settings
+from flood_command_center.models import BroadcastRequest, BroadcastResponse, LiveStatus
+from flood_command_center.service import FloodRiskService
 
 
 settings = get_settings()
