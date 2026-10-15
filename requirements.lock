@@ -8,6 +8,7 @@ opencv-python-headless==4.10.0.84
 streamlit==1.41.1
 pydeck==0.9.1
 pandas==2.2.3
+pyarrow==18.1.0
 pydantic==2.10.5
 numpy==1.26.4
 httpx==0.28.1
