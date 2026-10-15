@@ -8,6 +8,7 @@ from threading import Lock
 
 from agents import build_graph, run_pipeline, trace_for_state
 from config import Settings, get_settings
+from live_streams import LiveDataEngine
 from mock_streams import MockStreamEngine
 from models import (
     BroadcastRequest,
@@ -23,6 +24,7 @@ class FloodRiskService:
     def __init__(self, settings: Settings | None = None, engine: MockStreamEngine | None = None) -> None:
         self.settings = settings or get_settings()
         self.engine = engine or MockStreamEngine(city=self.settings.city)
+        self.live_data = LiveDataEngine(self.settings, fallback_engine=self.engine)
         self.graph = build_graph()
         self._latest: LiveStatus | None = None
         self._sequence = 0
@@ -32,7 +34,8 @@ class FloodRiskService:
         """Create one atomic snapshot for both the API and dashboard."""
 
         with self._lock:
-            telemetry, pings = self.engine.snapshot()
+            live_snapshot = self.live_data.snapshot()
+            telemetry, pings = live_snapshot.telemetry, live_snapshot.social_pings
             vision: VisionResult = analyze_frame(
                 cycle=self._sequence,
                 use_yolo=self.settings.enable_yolo,
@@ -44,6 +47,8 @@ class FloodRiskService:
                 sequence=self._sequence,
                 generated_at=utc_now(),
                 city=self.settings.city,
+                data_mode=live_snapshot.data_mode,
+                data_sources=live_snapshot.data_sources,
                 telemetry=telemetry,
                 social_pings=pings,
                 telemetry_analysis=state["telemetry_analysis"],

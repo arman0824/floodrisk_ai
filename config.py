@@ -26,11 +26,15 @@ class Settings:
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     stream_interval_seconds: float = 5.0
+    live_data_enabled: bool = False
+    live_data_timeout_seconds: float = 8.0
+    social_feed_query: str = "Mumbai flood OR waterlogging OR heavy rain"
     api_base_url: str = "http://localhost:8000"
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
     enable_yolo: bool = False
     yolo_model_path: str = "assets/models/yolov8n.pt"
+    cctv_video_path: str | None = None
 
     @property
     def llm_enabled(self) -> bool:
@@ -44,9 +48,13 @@ def get_settings() -> Settings:
         api_host=os.getenv("API_HOST", "0.0.0.0"),
         api_port=int(os.getenv("API_PORT", "8000")),
         stream_interval_seconds=float(os.getenv("STREAM_INTERVAL_SECONDS", "5")),
+        live_data_enabled=_as_bool(os.getenv("LIVE_DATA_ENABLED"), False),
+        live_data_timeout_seconds=float(os.getenv("LIVE_DATA_TIMEOUT_SECONDS", "8")),
+        social_feed_query=os.getenv("SOCIAL_FEED_QUERY", "Mumbai flood OR waterlogging OR heavy rain"),
         api_base_url=os.getenv("API_BASE_URL", "http://localhost:8000"),
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         enable_yolo=_as_bool(os.getenv("ENABLE_YOLO"), False),
         yolo_model_path=os.getenv("YOLO_MODEL_PATH", "assets/models/yolov8n.pt"),
+        cctv_video_path=os.getenv("CCTV_VIDEO_PATH") or None,
     )

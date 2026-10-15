@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 RiskLevel = Literal["Low", "Medium", "High", "Critical"]
+DataMode = Literal["live", "mixed", "fallback"]
 
 
 def utc_now() -> datetime:
@@ -32,6 +33,7 @@ class TelemetryUpdate(BaseModel):
     timestamp: datetime = Field(default_factory=utc_now)
     rainfall_mm_per_hour: float = Field(ge=0, le=500)
     river_gauge_height_m: float = Field(ge=0, le=20)
+    river_discharge_m3_s: float | None = Field(default=None, ge=0)
     gauge_trend: Literal["rising", "steady", "falling"]
     wind_speed_kmh: float = Field(ge=0, le=250)
     source: str = "mock-weather-gauge"
@@ -44,6 +46,17 @@ class SocialPing(BaseModel):
     text: str = Field(min_length=1)
     timestamp: datetime = Field(default_factory=utc_now)
     source: str = "simulated-social-feed"
+
+
+class DataSourceStatus(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    kind: Literal["weather", "hydrology", "social", "cctv"]
+    status: Literal["live", "fallback", "unavailable"]
+    detail: str
+    fetched_at: datetime = Field(default_factory=utc_now)
+    latency_ms: int | None = Field(default=None, ge=0)
 
 
 class TelemetryAnalysis(BaseModel):
@@ -132,6 +145,8 @@ class LiveStatus(BaseModel):
     sequence: int = Field(ge=0)
     generated_at: datetime = Field(default_factory=utc_now)
     city: str
+    data_mode: DataMode
+    data_sources: list[DataSourceStatus] = Field(default_factory=list)
     telemetry: list[TelemetryUpdate]
     social_pings: list[SocialPing]
     telemetry_analysis: TelemetryAnalysis
