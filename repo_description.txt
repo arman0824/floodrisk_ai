@@ -1,0 +1,1 @@
+Multi-Agent Flood Risk & Disaster Advisory Console using live weather, hydrology, and public incident data to generate real-time risk scores, evacuation zones, response priorities, and emergency SMS recommendations through an interactive Streamlit dashboard.
