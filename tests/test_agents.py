@@ -29,3 +29,13 @@ def test_social_agent_extracts_location_people_and_criticality() -> None:
     assert analysis.stranded_citizens == 7
     assert analysis.maximum_severity == "Critical"
     assert analysis.sentiment == "negative"
+
+
+def test_social_agent_maps_common_location_aliases() -> None:
+    result = social_agent(
+        FloodGraphState(
+            social_pings=[SocialPing(ping_id="alias", text="Waterlogging reported in Andheri; avoid the area.")]
+        )
+    )
+
+    assert result["social_analysis"].locations == ["Andheri East"]

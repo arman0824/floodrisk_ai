@@ -4,6 +4,7 @@ from mock_streams import MUMBAI_NODES, MockStreamEngine
 def test_mock_snapshot_has_realistic_shape_and_bounds() -> None:
     telemetry, pings = MockStreamEngine(seed=11).snapshot()
 
+    assert len(MUMBAI_NODES) >= 20
     assert len(telemetry) == len(MUMBAI_NODES)
     assert 3 <= len(pings) <= 5
     assert {item.location for item in telemetry} == {str(node["location"]) for node in MUMBAI_NODES}

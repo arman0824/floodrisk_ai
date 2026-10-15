@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any, TypedDict
 
+from mock_streams import MUMBAI_NODES
 from models import (
     AgentTrace,
     DispatchSynthesis,
@@ -94,7 +95,19 @@ def telemetry_agent(state: FloodGraphState) -> dict[str, Any]:
     }
 
 
-_LOCATION_NAMES = ("Kurla", "Sion", "Dharavi", "Andheri East", "Bandra West")
+_LOCATION_NAMES = tuple(str(node["location"]) for node in MUMBAI_NODES)
+_LOCATION_ALIASES = {
+    "andheri": "Andheri East",
+    "bandra": "Bandra West",
+    "borivali": "Borivali West",
+    "ghatkopar east": "Ghatkopar",
+    "ghatkopar west": "Ghatkopar",
+    "jogeshwari": "Jogeshwari East",
+    "kandivali": "Kandivali East",
+    "malad": "Malad West",
+    "santacruz": "Santacruz East",
+    "vile parle": "Vile Parle East",
+}
 _SEVERITY_WORDS: tuple[tuple[str, str], ...] = (
     ("Critical", "critical|trapped|rescue boats|children|elderly|first floor"),
     ("High", "sos|stranded|waist-deep|no power|flooded|rising fast"),
@@ -104,8 +117,12 @@ _NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
 
 
 def _location_from_text(text: str) -> str:
-    for location in _LOCATION_NAMES:
-        if location.lower() in text.lower():
+    lowered = text.lower()
+    for alias, location in sorted(_LOCATION_ALIASES.items(), key=lambda pair: len(pair[0]), reverse=True):
+        if alias in lowered:
+            return location
+    for location in sorted(_LOCATION_NAMES, key=len, reverse=True):
+        if location.lower() in lowered:
             return location
     return "Unmapped sector"
 

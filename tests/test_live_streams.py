@@ -1,6 +1,6 @@
 from config import Settings
 from live_streams import LiveDataEngine
-from mock_streams import MockStreamEngine
+from mock_streams import MUMBAI_NODES, MockStreamEngine
 
 
 def test_live_engine_has_explicit_offline_fallback_mode() -> None:
@@ -8,7 +8,7 @@ def test_live_engine_has_explicit_offline_fallback_mode() -> None:
     snapshot = engine.snapshot()
 
     assert snapshot.data_mode == "fallback"
-    assert len(snapshot.telemetry) == 5
+    assert len(snapshot.telemetry) == len(MUMBAI_NODES)
     assert all(source.status == "fallback" for source in snapshot.data_sources)
 
 

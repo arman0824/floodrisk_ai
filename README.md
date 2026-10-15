@@ -37,7 +37,10 @@ Open <http://localhost:8501> for the dashboard. The API is available at
 When `LIVE_DATA_ENABLED=true`:
 
 - **Open-Meteo Forecast API** supplies current precipitation and wind for the
-  five Mumbai map nodes.
+  expanded Mumbai flood-prone monitoring zones, including Kurla, Sion,
+  Dharavi, Hindmata, Wadala, Parel, Chembur, Ghatkopar, Vikhroli, Bhandup,
+  Mulund, Powai, Andheri, Jogeshwari, Goregaon, Malad, Kandivali, Borivali,
+  Santacruz, Vile Parle, Bandra, Govandi, and Mankhurd.
 - **Open-Meteo Flood API** supplies modeled river discharge. The actual
   `river_discharge_m3_s` value is retained, and the risk pipeline separately
   derives a clearly labeled level proxy because this prototype does not have a
