@@ -26,7 +26,7 @@ def test_health_and_latest_endpoints() -> None:
     payload = latest.json()
     assert payload["city"] == "Mumbai"
     assert payload["dispatch"]["risk_score"] >= 1
-    assert payload["vision"]["flooding_depth_cm"] > 0
+    assert payload["data_sources"]
 
 
 def test_broadcast_is_accepted_as_simulation() -> None:
@@ -47,12 +47,3 @@ def test_live_status_route_is_configured_for_sse() -> None:
 
     assert response.media_type == "text/event-stream"
     assert response.headers["cache-control"] == "no-cache"
-
-
-def test_cctv_upload_rejects_unsupported_files() -> None:
-    response = client.post(
-        "/api/cctv/upload",
-        files={"file": ("notes.txt", b"not a video", "text/plain")},
-    )
-
-    assert response.status_code == 415

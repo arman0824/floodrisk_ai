@@ -52,7 +52,7 @@ class DataSourceStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    kind: Literal["weather", "hydrology", "social", "cctv"]
+    kind: Literal["weather", "hydrology", "social"]
     status: Literal["live", "fallback", "unavailable"]
     detail: str
     fetched_at: datetime = Field(default_factory=utc_now)
@@ -79,29 +79,6 @@ class SocialAnalysis(BaseModel):
     sentiment: Literal["negative", "mixed", "neutral"]
     severity_by_location: dict[str, str] = Field(default_factory=dict)
     findings: list[str] = Field(default_factory=list)
-
-
-class DetectedObject(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    label: str
-    confidence: float = Field(ge=0, le=1)
-    flooded: bool = False
-    box: list[int] = Field(min_length=4, max_length=4)
-
-
-class VisionResult(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    flooding_depth_cm: int = Field(ge=0, le=500)
-    waterline_px: int = Field(ge=0)
-    water_mask_ratio: float = Field(ge=0, le=1)
-    detected_objects: list[DetectedObject] = Field(default_factory=list)
-    annotated_frame_base64: str = Field(min_length=1)
-    frame_width: int = Field(gt=0)
-    frame_height: int = Field(gt=0)
-    detector_mode: Literal["opencv-simulation", "yolov8n"]
-    source: str = "mock-cctv"
 
 
 class ResourcePriority(BaseModel):
@@ -151,7 +128,6 @@ class LiveStatus(BaseModel):
     social_pings: list[SocialPing]
     telemetry_analysis: TelemetryAnalysis
     social_analysis: SocialAnalysis
-    vision: VisionResult
     dispatch: DispatchSynthesis
     traces: list[AgentTrace]
 

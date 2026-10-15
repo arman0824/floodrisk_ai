@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import base64
 import math
 import os
 import time
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -109,7 +107,6 @@ def _map_layers(status: dict[str, Any]) -> tuple[pdk.Deck, pd.DataFrame]:
                 "longitude": node["coordinates"]["longitude"],
                 "score": score,
                 "risk": _risk_level(score),
-                "depth": status["vision"]["flooding_depth_cm"],
                 "color": color,
                 "radius": 180 + score * 7,
             }
@@ -186,7 +183,7 @@ def _map_layers(status: dict[str, Any]) -> tuple[pdk.Deck, pd.DataFrame]:
     deck = pdk.Deck(
         layers=layers,
         initial_view_state=pdk.ViewState(latitude=19.075, longitude=72.868, zoom=10.7, pitch=48, bearing=-10),
-        tooltip={"html": "<b>{location}</b><br/>Risk: {score}/100<br/>Tier: {risk}<br/>CCTV depth: {depth} cm", "style": {"backgroundColor": "#10242e", "color": "white"}},
+        tooltip={"html": "<b>{location}</b><br/>Risk: {score}/100<br/>Tier: {risk}", "style": {"backgroundColor": "#10242e", "color": "white"}},
         map_style="light",
     )
     return deck, nodes
@@ -213,27 +210,9 @@ def _broadcast(status: dict[str, Any]) -> None:
     st.session_state["broadcast_result"] = result
 
 
-def _upload_cctv(uploaded_file: Any) -> None:
-    filename = Path(uploaded_file.name).name
-    payload = {"file": (filename, uploaded_file.getvalue(), uploaded_file.type or "video/mp4")}
-    try:
-        response = httpx.post(f"{_api_base()}/api/cctv/upload", files=payload, timeout=30)
-        response.raise_for_status()
-        result = response.json()
-    except (httpx.HTTPError, ValueError):
-        # Streamlit-only launches still support the supplied video locally.
-        destination = Path("runtime") / "cctv" / filename
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(uploaded_file.getvalue())
-        _local_service().set_cctv_video_path(str(destination))
-        result = {"accepted": True, "filename": filename, "message": "Loaded into local fallback pipeline."}
-    st.session_state["cctv_upload_result"] = result
-
-
 def _render_dashboard() -> None:
     status, source = _fetch_status()
     dispatch = status["dispatch"]
-    vision = status["vision"]
     social = status["social_analysis"]
     telemetry = status["telemetry_analysis"]
     score = dispatch["risk_score"]
@@ -246,7 +225,7 @@ def _render_dashboard() -> None:
     metric_cols[0].metric("Absolute risk", f"{score}/100", dispatch["risk_level"])
     metric_cols[1].metric("Rainfall peak", f"{max(item['rainfall_mm_per_hour'] for item in status['telemetry']):.0f} mm/h")
     metric_cols[2].metric("Gauge max", f"{max(item['river_gauge_height_m'] for item in status['telemetry']):.2f} m")
-    metric_cols[3].metric("CCTV flood depth", f"{vision['flooding_depth_cm']} cm", vision["detector_mode"])
+    metric_cols[3].metric("Live sectors", str(len(dispatch["affected_sectors"])), dispatch["risk_level"])
     metric_cols[4].metric("Citizens flagged", str(social["stranded_citizens"]), social["maximum_severity"])
 
     left, right = st.columns([1.55, 1], gap="large")
@@ -258,16 +237,6 @@ def _render_dashboard() -> None:
         for column, (name, color) in zip(legend_cols, RISK_COLORS.items()):
             column.markdown(f"<span style='color:rgb({color[0]},{color[1]},{color[2]})'>●</span> {name}", unsafe_allow_html=True)
         st.caption(f"Cycle {status['sequence']} · Generated {status['generated_at']} · halos scale with node risk; arcs show rescue staging paths")
-
-        with st.expander("Connect supplied CCTV video", expanded=False):
-            uploaded_file = st.file_uploader("Upload a CCTV clip", type=["mp4", "mov", "avi", "m4v", "mkv"], key="cctv-upload")
-            if uploaded_file is not None and st.button("Load CCTV clip into live pipeline", key="load-cctv"):
-                _upload_cctv(uploaded_file)
-            if "cctv_upload_result" in st.session_state:
-                st.info(st.session_state["cctv_upload_result"].get("message", "CCTV clip loaded."))
-        st.markdown("<div class='panel-title'>▣ Live CCTV / flood-depth analysis</div>", unsafe_allow_html=True)
-        image_bytes = base64.b64decode(vision["annotated_frame_base64"])
-        st.image(image_bytes, use_container_width=True, caption=f"{vision['source']} · {vision['detector_mode']} · {len(vision['detected_objects'])} vehicle detections · mask {vision['water_mask_ratio']:.0%}")
 
     with right:
         st.markdown(f"<div class='panel'><div class='panel-title'>▲ Automated alert priority</div><div class='score'>{score}<small> / 100</small></div><h3>{dispatch['headline']}</h3><p>{dispatch['rationale']}</p></div>", unsafe_allow_html=True)

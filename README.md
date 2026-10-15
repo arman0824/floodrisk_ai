@@ -3,7 +3,7 @@
 Production-shaped hackathon prototype for a multi-agent flood risk and
 disaster advisory console. It combines a FastAPI streaming backend, a
 LangGraph-style agent pipeline, live public weather and incident feeds,
-OpenCV/video flood-depth analysis, and a Streamlit/Pydeck executive dashboard.
+explainable dispatch synthesis, and a Streamlit/Pydeck executive dashboard.
 
 The checked-in `.env.example` enables live public-data mode. Each five-second
 cycle fetches current data and records provider health. If a provider is down,
@@ -64,22 +64,12 @@ Copy `.env.example` to `.env` and set `OPENAI_API_KEY` to enable optional LLM
 summaries. The risk calculation and the fallback summaries remain local and
 deterministic if the key is missing or an API call fails.
 
-The supplied `car_flood.mp4` clip is looped as a live CCTV source by default.
-You can replace `CCTV_VIDEO_PATH` in `.env`, or upload another clip from the
-**Connect supplied CCTV video** control in the dashboard. The API endpoint is
-`POST /api/cctv/upload`.
-
-To use a pre-downloaded YOLOv8n model, put it at
-`assets/models/yolov8n.pt` and set `ENABLE_YOLO=true`. The application never
-downloads model weights during startup.
-
 ## API endpoints
 
 - `GET /api/health` — service health and mode information.
 - `GET /api/latest` — latest complete status snapshot.
 - `GET /api/live-status` — Server-Sent Events stream of status updates.
 - `POST /api/broadcast` — records a simulated SMS broadcast.
-- `POST /api/cctv/upload` — loads a local CCTV clip into the live frame loop.
 
 ## Testing
 
@@ -88,4 +78,4 @@ make test
 ```
 
 Tests are designed to run against deterministic local data and do not require
-an API key, model weights, Docker, or internet access.
+an API key, Docker, or internet access.

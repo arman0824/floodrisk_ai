@@ -1,12 +1,11 @@
-from agents import LANGGRAPH_AVAILABLE, FloodGraphState, build_graph, run_pipeline, social_agent
+from agents import LANGGRAPH_AVAILABLE, FloodGraphState, run_pipeline, social_agent
 from mock_streams import create_demo_snapshot
 from models import SocialPing
-from vision_processor import analyze_frame
 
 
 def test_explicit_graph_compiles_and_transfers_agent_outputs() -> None:
     telemetry, pings = create_demo_snapshot(seed=42)
-    result = run_pipeline(telemetry, pings, vision=analyze_frame(cycle=1))
+    result = run_pipeline(telemetry, pings)
 
     assert LANGGRAPH_AVAILABLE
     assert result["telemetry_analysis"].normalized_score in range(101)
@@ -30,11 +29,3 @@ def test_social_agent_extracts_location_people_and_criticality() -> None:
     assert analysis.stranded_citizens == 7
     assert analysis.maximum_severity == "Critical"
     assert analysis.sentiment == "negative"
-
-
-def test_graph_falls_back_to_local_vision_when_vision_is_missing() -> None:
-    telemetry, pings = create_demo_snapshot(seed=4)
-    result = run_pipeline(telemetry, pings)
-
-    assert result["vision_result" ] is None
-    assert result["dispatch_output"].risk_score >= 1

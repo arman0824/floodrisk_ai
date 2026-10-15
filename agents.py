@@ -13,10 +13,7 @@ from models import (
     SocialPing,
     TelemetryAnalysis,
     TelemetryUpdate,
-    VisionResult,
-    utc_now,
 )
-from vision_processor import analyze_frame
 
 try:
     from langgraph.graph import END, START, StateGraph
@@ -33,14 +30,13 @@ class FloodGraphState(TypedDict, total=False):
 
     The graph is intentionally sequential: telemetry writes
     ``telemetry_analysis``, social listening writes ``social_analysis``, and
-    the synthesizer reads both keys plus ``vision_result``. Keeping these
+    the synthesizer reads both analysis keys. Keeping these
     names explicit prevents opaque agent-to-agent message passing and makes
     the compiled graph inspectable in a demo.
     """
 
     telemetry_input: list[TelemetryUpdate]
     social_pings: list[SocialPing]
-    vision_result: VisionResult | None
     telemetry_analysis: TelemetryAnalysis
     social_analysis: SocialAnalysis
     dispatch_output: DispatchSynthesis
@@ -216,9 +212,7 @@ def dispatch_synthesizer(state: FloodGraphState) -> dict[str, Any]:
         maximum_severity="Low",
         sentiment="neutral",
     )
-    vision = state.get("vision_result") or analyze_frame(cycle=0)
-    vision_score = _clamp(vision.flooding_depth_cm / 180 * 100)
-    score = _clamp(telemetry.normalized_score * 0.50 + social.normalized_score * 0.30 + vision_score * 0.20, 1, 100)
+    score = _clamp(telemetry.normalized_score * 0.62 + social.normalized_score * 0.38, 1, 100)
     level = "Critical" if score >= 82 else ("High" if score >= 62 else ("Medium" if score >= 36 else "Low"))
     candidates = set(telemetry.affected_locations)
     candidates.update(location for location, severity in social.severity_by_location.items() if severity in {"High", "Critical"})
@@ -242,21 +236,21 @@ def dispatch_synthesizer(state: FloodGraphState) -> dict[str, Any]:
         risk_score=score,
         risk_level=level,
         headline=headline,
-        rationale=f"Telemetry {telemetry.normalized_score}/100 + social distress {social.normalized_score}/100 + CCTV depth {vision.flooding_depth_cm} cm.",
+        rationale=f"Live telemetry {telemetry.normalized_score}/100 + public incident distress {social.normalized_score}/100.",
         evacuation_zones=evacuation,
         affected_sectors=affected,
         resource_priority=resources,
         emergency_sms=sms,
         recommended_actions=actions,
-        score_breakdown={"telemetry": telemetry.normalized_score, "social": social.normalized_score, "vision": vision_score},
+        score_breakdown={"telemetry": telemetry.normalized_score, "social": social.normalized_score},
     )
     dispatch.headline = _optional_llm_headline(dispatch)
     trace = [
         AgentTrace(
             agent="Dispatch Synthesizer",
             event_type="handoff",
-            message="Received validated telemetry, social-listening, and vision outputs.",
-            payload={"telemetry_score": telemetry.normalized_score, "social_score": social.normalized_score, "vision_depth_cm": vision.flooding_depth_cm},
+            message="Received validated telemetry and public incident-listening outputs.",
+            payload={"telemetry_score": telemetry.normalized_score, "social_score": social.normalized_score},
         ),
         AgentTrace(
             agent="Dispatch Synthesizer",
@@ -298,14 +292,12 @@ def build_graph() -> Any:
 def run_pipeline(
     telemetry: list[TelemetryUpdate],
     social_pings: list[SocialPing],
-    vision: VisionResult | None = None,
     graph: Any | None = None,
 ) -> dict[str, Any]:
     compiled = graph or build_graph()
     state: FloodGraphState = {
         "telemetry_input": telemetry,
         "social_pings": social_pings,
-        "vision_result": vision,
     }
     return dict(compiled.invoke(state))
 

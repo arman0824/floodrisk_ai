@@ -32,9 +32,6 @@ class Settings:
     api_base_url: str = "http://localhost:8000"
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
-    enable_yolo: bool = False
-    yolo_model_path: str = "assets/models/yolov8n.pt"
-    cctv_video_path: str | None = None
 
     @property
     def llm_enabled(self) -> bool:
@@ -54,7 +51,4 @@ def get_settings() -> Settings:
         api_base_url=os.getenv("API_BASE_URL", "http://localhost:8000"),
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        enable_yolo=_as_bool(os.getenv("ENABLE_YOLO"), False),
-        yolo_model_path=os.getenv("YOLO_MODEL_PATH", "assets/models/yolov8n.pt"),
-        cctv_video_path=os.getenv("CCTV_VIDEO_PATH") or "car_flood.mp4",
     )
