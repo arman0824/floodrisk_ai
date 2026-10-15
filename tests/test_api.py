@@ -8,6 +8,14 @@ from main import app, live_status
 client = TestClient(app)
 
 
+def test_root_explains_available_interfaces() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.json()["docs"] == "/docs"
+    assert response.json()["dashboard"] == "http://localhost:8501"
+
+
 def test_health_and_latest_endpoints() -> None:
     health = client.get("/api/health")
     latest = client.get("/api/latest")

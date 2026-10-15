@@ -31,6 +31,19 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {
+        "service": "flood-command-center",
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/api/health",
+        "latest_status": "/api/latest",
+        "live_stream": "/api/live-status",
+        "dashboard": "http://localhost:8501",
+    }
+
+
 @app.get("/api/health")
 async def health() -> dict[str, object]:
     return {

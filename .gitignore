@@ -8,6 +8,7 @@ venv/
 env/
 .env
 .DS_Store
+.vscode/
 *.log
 *.egg-info/
 dist/
