@@ -1,4 +1,4 @@
-# Flood Command Center
+# Flood Risk Analyzer
 
 Production-shaped hackathon prototype for a multi-agent flood risk and
 disaster advisory console. It combines a FastAPI streaming backend, a
