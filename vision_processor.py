@@ -91,6 +91,7 @@ def analyze_frame(
     cycle: int = 0,
     use_yolo: bool | None = None,
     model_path: str | None = None,
+    source: str = "mock-cctv",
 ) -> VisionResult:
     """Annotate a frame and estimate flood depth in centimeters.
 
@@ -168,6 +169,7 @@ def analyze_frame(
         frame_width=width,
         frame_height=height,
         detector_mode="yolov8n" if yolo_objects else "opencv-simulation",
+        source=source,
     )
 
 
@@ -179,3 +181,42 @@ def decode_frame(encoded: str) -> np.ndarray:
     if image is None:
         raise ValueError("encoded frame is not a valid image")
     return image
+
+
+def analyze_video_frame(
+    video_path: str,
+    *,
+    cycle: int = 0,
+    use_yolo: bool | None = None,
+    model_path: str | None = None,
+) -> VisionResult:
+    """Read a rotating frame from a supplied CCTV clip.
+
+    The clip is treated as a live camera loop: each service cycle advances by
+    roughly one second and wraps around at the end. No video is uploaded or
+    sent to a third-party service.
+    """
+
+    path = Path(video_path)
+    capture = cv2.VideoCapture(str(path))
+    if not capture.isOpened():
+        capture.release()
+        raise ValueError(f"could not open CCTV video: {video_path}")
+    frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = max(1.0, float(capture.get(cv2.CAP_PROP_FPS)))
+    if frame_count <= 0:
+        capture.release()
+        raise ValueError(f"CCTV video has no readable frames: {video_path}")
+    frame_index = int((cycle * fps) % frame_count)
+    capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+    success, frame = capture.read()
+    capture.release()
+    if not success or frame is None:
+        raise ValueError(f"could not decode CCTV frame {frame_index}: {video_path}")
+    return analyze_frame(
+        frame,
+        cycle=cycle,
+        use_yolo=use_yolo,
+        model_path=model_path,
+        source=f"provided-cctv:{path.name}",
+    )

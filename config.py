@@ -56,5 +56,5 @@ def get_settings() -> Settings:
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         enable_yolo=_as_bool(os.getenv("ENABLE_YOLO"), False),
         yolo_model_path=os.getenv("YOLO_MODEL_PATH", "assets/models/yolov8n.pt"),
-        cctv_video_path=os.getenv("CCTV_VIDEO_PATH") or None,
+        cctv_video_path=os.getenv("CCTV_VIDEO_PATH") or "car_flood.mp4",
     )

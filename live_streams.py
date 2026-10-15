@@ -87,6 +87,7 @@ class LiveDataEngine:
                 social_pings=social,
                 data_sources=[
                     DataSourceStatus(name="Local deterministic stream", kind="weather", status="fallback", detail="LIVE_DATA_ENABLED=false"),
+                    DataSourceStatus(name="Local deterministic hydrology stream", kind="hydrology", status="fallback", detail="LIVE_DATA_ENABLED=false"),
                     DataSourceStatus(name="Local deterministic incident stream", kind="social", status="fallback", detail="LIVE_DATA_ENABLED=false"),
                 ],
                 data_mode="fallback",
@@ -111,8 +112,7 @@ class LiveDataEngine:
             social, social_status = self._fetch_social()
             sources.append(social_status)
         except Exception as exc:
-            _, fallback_social = self.fallback_engine.snapshot()
-            social = fallback_social
+            social = self.fallback_engine.social_snapshot(fallback_telemetry)
             sources.append(self._failure_status("Google News RSS", "social", exc))
         live_count = sum(item.status == "live" for item in sources)
         fallback_count = sum(item.status == "fallback" for item in sources)

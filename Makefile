@@ -8,7 +8,7 @@ install:
 	$(PYTHON) -m pip install -r requirements.lock
 
 test:
-	$(PYTHON) -m pytest -q
+	LIVE_DATA_ENABLED=false $(PYTHON) -m pytest -q
 
 api:
 	$(PYTHON) -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload

@@ -2,12 +2,13 @@
 
 Production-shaped hackathon prototype for a multi-agent flood risk and
 disaster advisory console. It combines a FastAPI streaming backend, a
-LangGraph-style agent pipeline, deterministic mock telemetry/social feeds,
-OpenCV flood-depth simulation, and a Streamlit/Pydeck executive dashboard.
+LangGraph-style agent pipeline, live public weather and incident feeds,
+OpenCV/video flood-depth analysis, and a Streamlit/Pydeck executive dashboard.
 
-The default mode is deterministic and works without API keys or network
-access at runtime. An optional OpenAI summarization layer and optional local
-YOLOv8n weights can be enabled through environment variables.
+The checked-in `.env.example` enables live public-data mode. Each five-second
+cycle fetches current data and records provider health. If a provider is down,
+only that provider falls back to deterministic local data and the dashboard
+labels the result as `mixed` or `fallback`.
 
 ## Quick start
 
@@ -29,6 +30,24 @@ make dashboard
 ```
 
 Open <http://localhost:8501> for the dashboard. The API is available at
+<http://localhost:8000/docs>.
+
+## Live data sources
+
+When `LIVE_DATA_ENABLED=true`:
+
+- **Open-Meteo Forecast API** supplies current precipitation and wind for the
+  five Mumbai map nodes.
+- **Open-Meteo Flood API** supplies modeled river discharge. The actual
+  `river_discharge_m3_s` value is retained, and the risk pipeline separately
+  derives a clearly labeled level proxy because this prototype does not have a
+  free public Mumbai gauge-height feed.
+- **Google News RSS** supplies current public incident reports matching
+  `SOCIAL_FEED_QUERY`. These are public reports, not authenticated X/Twitter
+  posts.
+
+Every API status includes `data_mode` and `data_sources`, including provider
+health, latency, and fallback details.
 
 ## Docker
 
@@ -37,7 +56,7 @@ docker compose up --build
 ```
 
 The dashboard runs on port 8501 and the API runs on port 8000. Docker is not
-required for the deterministic test suite.
+required for the offline test suite.
 
 ## Optional integrations
 
@@ -45,7 +64,13 @@ Copy `.env.example` to `.env` and set `OPENAI_API_KEY` to enable optional LLM
 summaries. The risk calculation and the fallback summaries remain local and
 deterministic if the key is missing or an API call fails.
 
+The supplied `car_flood.mp4` clip is looped as a live CCTV source by default.
+You can replace `CCTV_VIDEO_PATH` in `.env`, or upload another clip from the
+**Connect supplied CCTV video** control in the dashboard. The API endpoint is
+`POST /api/cctv/upload`.
+
 To use a pre-downloaded YOLOv8n model, put it at
+`assets/models/yolov8n.pt` and set `ENABLE_YOLO=true`. The application never
 downloads model weights during startup.
 
 ## API endpoints
@@ -54,6 +79,7 @@ downloads model weights during startup.
 - `GET /api/latest` — latest complete status snapshot.
 - `GET /api/live-status` — Server-Sent Events stream of status updates.
 - `POST /api/broadcast` — records a simulated SMS broadcast.
+- `POST /api/cctv/upload` — loads a local CCTV clip into the live frame loop.
 
 ## Testing
 

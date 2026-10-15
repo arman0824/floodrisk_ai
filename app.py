@@ -6,6 +6,7 @@ import base64
 import math
 import os
 import time
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -212,6 +213,23 @@ def _broadcast(status: dict[str, Any]) -> None:
     st.session_state["broadcast_result"] = result
 
 
+def _upload_cctv(uploaded_file: Any) -> None:
+    filename = Path(uploaded_file.name).name
+    payload = {"file": (filename, uploaded_file.getvalue(), uploaded_file.type or "video/mp4")}
+    try:
+        response = httpx.post(f"{_api_base()}/api/cctv/upload", files=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+    except (httpx.HTTPError, ValueError):
+        # Streamlit-only launches still support the supplied video locally.
+        destination = Path("runtime") / "cctv" / filename
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(uploaded_file.getvalue())
+        _local_service().set_cctv_video_path(str(destination))
+        result = {"accepted": True, "filename": filename, "message": "Loaded into local fallback pipeline."}
+    st.session_state["cctv_upload_result"] = result
+
+
 def _render_dashboard() -> None:
     status, source = _fetch_status()
     dispatch = status["dispatch"]
@@ -221,7 +239,7 @@ def _render_dashboard() -> None:
     score = dispatch["risk_score"]
 
     st.markdown(
-        f"<div class='hero'><div><div class='eyebrow'>MUMBAI · MULTI-AGENT INCIDENT OPERATIONS</div><h1>Flood Command Center</h1><p>Continuous sensing → explainable risk → coordinated response</p></div><div class='live-pill'>● LIVE · {source.upper()}</div></div>",
+        f"<div class='hero'><div><div class='eyebrow'>MUMBAI · MULTI-AGENT INCIDENT OPERATIONS</div><h1>Flood Command Center</h1><p>Continuous sensing → explainable risk → coordinated response</p></div><div class='live-pill'>● {source.upper()} · {status['data_mode'].upper()}</div></div>",
         unsafe_allow_html=True,
     )
     metric_cols = st.columns(5)
@@ -241,9 +259,15 @@ def _render_dashboard() -> None:
             column.markdown(f"<span style='color:rgb({color[0]},{color[1]},{color[2]})'>●</span> {name}", unsafe_allow_html=True)
         st.caption(f"Cycle {status['sequence']} · Generated {status['generated_at']} · halos scale with node risk; arcs show rescue staging paths")
 
-        st.markdown("<div class='panel-title'>▣ Simulated CCTV / OpenCV water-depth analysis</div>", unsafe_allow_html=True)
+        with st.expander("Connect supplied CCTV video", expanded=False):
+            uploaded_file = st.file_uploader("Upload a CCTV clip", type=["mp4", "mov", "avi", "m4v", "mkv"], key="cctv-upload")
+            if uploaded_file is not None and st.button("Load CCTV clip into live pipeline", key="load-cctv"):
+                _upload_cctv(uploaded_file)
+            if "cctv_upload_result" in st.session_state:
+                st.info(st.session_state["cctv_upload_result"].get("message", "CCTV clip loaded."))
+        st.markdown("<div class='panel-title'>▣ Live CCTV / flood-depth analysis</div>", unsafe_allow_html=True)
         image_bytes = base64.b64decode(vision["annotated_frame_base64"])
-        st.image(image_bytes, use_container_width=True, caption=f"{vision['detector_mode']} · {len(vision['detected_objects'])} vehicle detections · mask {vision['water_mask_ratio']:.0%}")
+        st.image(image_bytes, use_container_width=True, caption=f"{vision['source']} · {vision['detector_mode']} · {len(vision['detected_objects'])} vehicle detections · mask {vision['water_mask_ratio']:.0%}")
 
     with right:
         st.markdown(f"<div class='panel'><div class='panel-title'>▲ Automated alert priority</div><div class='score'>{score}<small> / 100</small></div><h3>{dispatch['headline']}</h3><p>{dispatch['rationale']}</p></div>", unsafe_allow_html=True)
@@ -264,6 +288,9 @@ def _render_dashboard() -> None:
 
         with st.expander("Decision inputs", expanded=False):
             st.write({"telemetry": telemetry, "social": social, "affected_sectors": dispatch["affected_sectors"]})
+        with st.expander("Live provider status", expanded=False):
+            for provider in status["data_sources"]:
+                st.write(f"{provider['status'].upper()} · {provider['name']} · {provider['detail']}")
 
 
 _inject_theme()

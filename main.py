@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -40,6 +41,7 @@ async def root() -> dict[str, str]:
         "health": "/api/health",
         "latest_status": "/api/latest",
         "live_stream": "/api/live-status",
+        "cctv_upload": "/api/cctv/upload",
         "dashboard": "http://localhost:8501",
     }
 
@@ -82,3 +84,26 @@ async def live_status() -> StreamingResponse:
 @app.post("/api/broadcast", response_model=BroadcastResponse)
 async def broadcast_alert(request: BroadcastRequest) -> BroadcastResponse:
     return service.broadcast(request)
+
+
+@app.post("/api/cctv/upload")
+async def upload_cctv(file: UploadFile = File(...)) -> dict[str, object]:
+    filename = Path(file.filename or "cctv.mp4").name
+    allowed_extensions = {".mp4", ".mov", ".avi", ".m4v", ".mkv"}
+    if Path(filename).suffix.lower() not in allowed_extensions:
+        raise HTTPException(status_code=415, detail="CCTV file must be mp4, mov, avi, m4v, or mkv")
+    contents = await file.read()
+    max_bytes = 500 * 1024 * 1024
+    if len(contents) > max_bytes:
+        raise HTTPException(status_code=413, detail="CCTV file must be 500 MB or smaller")
+    destination_dir = Path("runtime") / "cctv"
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    destination = destination_dir / filename
+    destination.write_bytes(contents)
+    service.set_cctv_video_path(str(destination))
+    return {
+        "accepted": True,
+        "filename": filename,
+        "path": str(destination),
+        "message": "CCTV clip loaded; the next live cycle will display a frame from this video.",
+    }

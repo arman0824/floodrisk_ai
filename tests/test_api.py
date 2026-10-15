@@ -47,3 +47,12 @@ def test_live_status_route_is_configured_for_sse() -> None:
 
     assert response.media_type == "text/event-stream"
     assert response.headers["cache-control"] == "no-cache"
+
+
+def test_cctv_upload_rejects_unsupported_files() -> None:
+    response = client.post(
+        "/api/cctv/upload",
+        files={"file": ("notes.txt", b"not a video", "text/plain")},
+    )
+
+    assert response.status_code == 415
