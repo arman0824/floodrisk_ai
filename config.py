@@ -1,0 +1,52 @@
+"""Environment-backed settings with safe defaults for a live demo."""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from functools import lru_cache
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:  # pragma: no cover - dotenv is a convenience dependency
+    pass
+
+
+def _as_bool(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+@dataclass(frozen=True)
+class Settings:
+    city: str = "Mumbai"
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+    stream_interval_seconds: float = 5.0
+    api_base_url: str = "http://localhost:8000"
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4o-mini"
+    enable_yolo: bool = False
+    yolo_model_path: str = "assets/models/yolov8n.pt"
+
+    @property
+    def llm_enabled(self) -> bool:
+        return bool(self.openai_api_key)
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings(
+        city=os.getenv("CITY", "Mumbai"),
+        api_host=os.getenv("API_HOST", "0.0.0.0"),
+        api_port=int(os.getenv("API_PORT", "8000")),
+        stream_interval_seconds=float(os.getenv("STREAM_INTERVAL_SECONDS", "5")),
+        api_base_url=os.getenv("API_BASE_URL", "http://localhost:8000"),
+        openai_api_key=os.getenv("OPENAI_API_KEY") or None,
+        openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        enable_yolo=_as_bool(os.getenv("ENABLE_YOLO"), False),
+        yolo_model_path=os.getenv("YOLO_MODEL_PATH", "assets/models/yolov8n.pt"),
+    )
