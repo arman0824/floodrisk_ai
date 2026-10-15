@@ -58,6 +58,9 @@ class FloodRiskService:
     def latest(self) -> LiveStatus:
         if self._latest is None:
             return self.refresh()
+        age_seconds = (utc_now() - self._latest.generated_at).total_seconds()
+        if age_seconds >= max(0.1, self.settings.stream_interval_seconds):
+            return self.refresh()
         return self._latest
 
     async def stream(self) -> AsyncIterator[LiveStatus]:

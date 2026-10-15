@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import base64
+import math
 import os
+import time
 from typing import Any
 
 import httpx
@@ -94,6 +96,7 @@ def _color_for(score: int) -> list[int]:
 
 def _map_layers(status: dict[str, Any]) -> tuple[pdk.Deck, pd.DataFrame]:
     node_scores = status["telemetry_analysis"]["node_scores"]
+    pulse = 1.0 + 0.14 * (1 + math.sin(time.time() * 3.2))
     telemetry = []
     for node in status["telemetry"]:
         score = int(node_scores.get(node["location"], 0))
@@ -112,7 +115,7 @@ def _map_layers(status: dict[str, Any]) -> tuple[pdk.Deck, pd.DataFrame]:
         )
     nodes = pd.DataFrame(telemetry)
     critical = nodes[nodes["score"] >= 55].copy()
-    critical["radius"] = critical["radius"] * 2.5
+    critical["radius"] = critical["radius"] * 2.5 * pulse
     critical["color"] = critical["color"].apply(lambda value: [value[0], value[1], value[2], 55])
 
     depot = {"latitude": 19.094, "longitude": 72.899}
@@ -265,7 +268,7 @@ def _render_dashboard() -> None:
 
 _inject_theme()
 if hasattr(st, "fragment"):
-    @st.fragment(run_every="5s")
+    @st.fragment(run_every="1s")
     def _live_fragment() -> None:
         _render_dashboard()
 
