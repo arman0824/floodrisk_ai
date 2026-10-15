@@ -1,8 +1,10 @@
-PYTHON ?= python3.11
+PYTHON ?= .venv/bin/python
+SYSTEM_PYTHON ?= python3.11
 
 .PHONY: install test api dashboard docker-build docker-up
 
 install:
+	@if [ ! -x "$(PYTHON)" ]; then $(SYSTEM_PYTHON) -m venv .venv; fi
 	$(PYTHON) -m pip install -r requirements.lock
 
 test:

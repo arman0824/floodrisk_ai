@@ -15,9 +15,8 @@ Requirements: Python 3.11+ and a virtual environment. Python 3.11.15 is
 pinned in `.python-version`.
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
 make install
+source .venv/bin/activate
 cp .env.example .env
 make test
 ```
