@@ -1,0 +1,69 @@
+FLOOD COMMAND CENTER
+====================
+
+Multi-Agent Flood Risk & Disaster Advisory Console using live weather,
+hydrology, and public incident data to generate real-time risk scores,
+evacuation zones, response priorities, and emergency SMS recommendations
+through an interactive Streamlit dashboard.
+
+
+OVERVIEW
+--------
+The system combines live public data providers with a LangGraph multi-agent
+pipeline and a FastAPI streaming backend. It is designed for rapid disaster
+monitoring, explainable risk assessment, and coordinated emergency response.
+
+
+CORE CAPABILITIES
+-----------------
+- Live weather and rainfall monitoring across major Mumbai flood-prone zones.
+- Modeled hydrology and river-discharge monitoring.
+- Public incident intelligence from live Google News RSS results.
+- Telemetry Agent for weather and hydrology analysis.
+- Social Listening Agent for incident location and severity extraction.
+- Dispatch Synthesizer for risk scoring and response prioritization.
+- Interactive Streamlit and Pydeck command-center dashboard.
+- Color-coded risk map with animated high-risk zones and dispatch arcs.
+- Emergency SMS drafting and simulated broadcast workflow.
+- Automatic provider health reporting and deterministic fallback handling.
+
+
+LIVE DATA SOURCES
+-----------------
+- Open-Meteo Forecast API:
+  Current precipitation, rainfall, and wind data.
+- Open-Meteo Flood API:
+  Modeled river-discharge data used as a transparent hydrology risk proxy.
+- Google News RSS:
+  Current public reports matching the configured Mumbai flood query.
+
+
+TECHNOLOGY STACK
+----------------
+- Python 3.11+
+- FastAPI and Uvicorn
+- LangGraph and LangChain
+- Streamlit and Pydeck
+- Pydantic
+- Open-Meteo and Google News RSS integrations
+- Pytest
+
+
+OUTPUTS
+-------
+- Real-time city and zone risk scores from 1 to 100.
+- Risk classifications: Low, Medium, High, and Critical.
+- Evacuation zones.
+- Prioritized emergency resources.
+- Agent handoff and analysis traces.
+- Emergency SMS recommendations.
+- Live provider status and fallback indicators.
+
+
+DATA INTEGRITY
+--------------
+Live provider failures do not crash the application. The affected provider
+falls back independently to deterministic local data, and the dashboard
+clearly labels the result as LIVE, MIXED, or FALLBACK.
+
+SMS delivery is simulated unless a real messaging provider is configured.
